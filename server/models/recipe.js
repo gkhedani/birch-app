@@ -1,5 +1,6 @@
 // Recipe collection
-const mongoose = require("mongoose");
+const mongoose = require("mongoose"),
+        extend = require("mongoose-schema-extend");
 
 const recipeSchema = mongoose.Schema( {
   name: {
@@ -46,4 +47,19 @@ const recipeSchema = mongoose.Schema( {
 
 const Recipe = mongoose.model("Recipe", recipeSchema);
 
-module.exports = {Recipe};
+const brewSchema = recipeSchema.extend({
+  batch:  {
+    type: Number,
+    default: null
+  },
+  brewName: {
+    type: String,
+    required: true,
+    minlength: 1,
+    trim: true
+  }
+});
+
+const Brew = mongoose.model("Brew", brewSchema);
+
+module.exports = {Recipe, Brew};
