@@ -75,6 +75,32 @@ app.get("/brews", (req, res) => {
   });
 });
 
+// add an ingredient to a brew
+app.patch("/ingredient/:id", (req, res) => {
+  let id = req.params.id;
+  if (!ObjectId.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  // add the ingredient to the ingredients array
+  Brew.updateOne({
+    _id: id
+  }, {$push: {
+    ingredients: {
+      ingredient: req.body.ingredient,
+      amt: req.body.amt,
+      unit: req.body.unit
+    }
+  }}).then((brew) => {
+    if (!brew) {
+      return res.status(404).send();
+    }
+
+    // success
+    res.send({brew});
+  }).catch((e) => res.status(400).send());
+});
+
 
 // get all brews for a base recipe
 app.get("/brews/:id", (req, res) => {
