@@ -16,9 +16,15 @@ const brewSchema = mongoose.Schema( {
     type: Number,
     default: null,
   },
+  batchSize: {
+    type: Number
+  },
   _base: {
     type: mongoose.Schema.Types.ObjectId,
     default: null
+  },
+  method: {
+    type: String
   },
   BJCPStyle: {
     type: String,
@@ -43,16 +49,57 @@ const brewSchema = mongoose.Schema( {
         type: String,
         enum: ['bag', 'bottle', 'bucket', 'cap', 'cup', 'gal', 'kit',
               'lb', 'oz', 'pint', 'pkg', 'roll', 'tbl', 'tsp']
+      },
+      price: {
+        type: Number,
+        default: 0.00
+      },
+      dateProcured: {
+        type: Date
       }
     }
   ],
+  yeastStarter: {
+    ingredients: [
+      {
+        ingredient: {
+          type: String,
+          required: true,
+          minlength: 1,
+          trim: true
+        },
+        amt: {
+          type: Number,
+          required: true
+        },
+        unit: {
+          type: String,
+          enum: ['bag', 'bottle', 'bucket', 'cap', 'cup', 'gal', 'kit',
+                'lb', 'oz', 'pint', 'pkg', 'roll', 'tbl', 'tsp']
+        },
+        price: {
+          type: Number,
+          default: 0.00
+        },
+        dateProcured: {
+          type: Date
+        }
+      }
+    ],
+    notes: {
+      type: String
+    }
+  },
   notes: {
-    type: String,
-    default: null
+    type: String
   },
   createdAt: {
     type: Date,
     required: true
+  },
+  updatedAt: {
+    type: Date,
+    default: null
   }
 });
 

@@ -13,6 +13,7 @@
     "express": "^4.15.4",
     "moment": "^2.18.1",
     "mongodb": "^2.2.31",
+    "mongodb-extended-json": "^1.10.0",
     "mongoose": "^4.11.9"
   },
   "devDependencies": {

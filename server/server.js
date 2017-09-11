@@ -21,13 +21,26 @@ app.post("/recipe", (req, res) => {
   let brew = new Brew({
     name: req.body.name,
     type: "base",
+    method: req.body.method,
     BJCPStyle: req.body.BJCPStyle,
     ingredients: [{
       ingredient: req.body.ingredient,
       amt: req.body.amt,
-      unit: req.body.unit
+      unit: req.body.unit,
+      price: req.body.price,
+      dateProcured: req.body.dateProcured
     },
     ],
+    yeastStarter: {
+      ingredients: [{
+        ingredient: req.body.ysIngredient,
+        amt: req.body.ysAmt,
+        unit: req.body.ysUnit
+      }],
+      price: req.body.ysPrice,
+      dateProcured: req.body.ysDateProcured,
+      notes: req.body.ysnotes
+    },
     notes: req.body.notes,
     createdAt: moment().valueOf()
   });
@@ -48,13 +61,28 @@ app.post("/varietal", (req, res) => {
     type: "varietal",
     _base: req.body.baseID,
     batch: req.body.batch,
+    batchSize: req.body.batchSize,
+    // method should come from base
+    method: req.body.method,
     BJCPStyle: req.body.BJCPStyle,
     ingredients: [{
       ingredient: req.body.ingredient,
       amt: req.body.amt,
-      unit: req.body.unit
+      unit: req.body.unit,
+      price: req.body.price,
+      dateProcured: req.body.dateProcured
     },
     ],
+    yeastStarter: {
+      ingredients: [{
+        ingredient: req.body.ysIngredient,
+        amt: req.body.ysAmt,
+        unit: req.body.ysUnit
+      }],
+      price: req.body.ysPrice,
+      dateProcured: req.body.ysDateProcured,
+      notes: req.body.ysnotes
+    },
     notes: req.body.notes,
     createdAt: moment().valueOf()
   });
@@ -76,7 +104,7 @@ app.get("/brews", (req, res) => {
 });
 
 // add an ingredient to a brew
-app.patch("/ingredient/:id", (req, res) => {
+app.patch("/ingredient/add/:id", (req, res) => {
   let id = req.params.id;
   if (!ObjectId.isValid(id)) {
     return res.status(404).send();
@@ -91,7 +119,40 @@ app.patch("/ingredient/:id", (req, res) => {
       amt: req.body.amt,
       unit: req.body.unit
     }
-  }}).then((brew) => {
+  }, $set: {
+      updatedAt: moment().valueOf()
+    }
+  }).then((brew) => {
+    if (!brew) {
+      return res.status(404).send();
+    }
+
+    // success
+    res.send({brew});
+  }).catch((e) => res.status(400).send());
+});
+
+
+// delete an ingredient from a brew
+app.patch("/ingredient/delete/:id", (req, res) => {
+  let id = req.params.id;
+  if (!ObjectId.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  // delete the ingredient from the ingredients array
+  // WARNING: returns 200 if a non-existent ingredient is deleted
+  Brew.updateOne({
+    _id: id
+  }, {$pull: {
+    ingredients: {
+      // ingredient: req.body.ingredient
+      _id: req.body.id
+    }
+  }, $set: {
+      updatedAt: moment().valueOf()
+    }
+  }).then((brew) => {
     if (!brew) {
       return res.status(404).send();
     }
