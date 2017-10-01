@@ -9,12 +9,16 @@
   "author": "Gail Hedani",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.17.2",
     "express": "^4.15.4",
+    "jsonwebtoken": "^8.0.1",
+    "lodash": "^4.17.4",
     "moment": "^2.18.1",
     "mongodb": "^2.2.31",
     "mongodb-extended-json": "^1.10.0",
-    "mongoose": "^4.11.9"
+    "mongoose": "^4.11.9",
+    "validator": "^9.0.0"
   },
   "devDependencies": {
     "nodemon": "^1.11.0"

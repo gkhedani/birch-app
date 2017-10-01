@@ -1,13 +1,44 @@
 // Recipe collection
-const mongoose = require("mongoose"),
-        extend = require("mongoose-schema-extend");
+const mongoose = require("mongoose");
 
-const recipeSchema = mongoose.Schema( {
+const recipeSchema = new mongoose.Schema( {
   name: {
     type: String,
     required: true,
     minlength: 1,
     trim: true
+  },
+  share: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
+  type: {
+    type: String,
+    enum: ['original', 'adaptation']
+  },
+  group: {
+    type: String,
+    enum: ['beef', 'beer',
+            'chicken', 'cider',
+            'mead',
+            'pork',
+            'vegetable',],
+    required: true
+  },
+  batch: {
+    type: Number,
+    default: null,
+  },
+  batchSize: {
+    type: Number
+  },
+  _original: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: null
+  },
+  method: {
+    type: String
   },
   BJCPStyle: {
     type: String,
@@ -32,34 +63,78 @@ const recipeSchema = mongoose.Schema( {
         type: String,
         enum: ['bag', 'bottle', 'bucket', 'cap', 'cup', 'gal', 'kit',
               'lb', 'oz', 'pint', 'pkg', 'roll', 'tbl', 'tsp']
+      },
+      price: {
+        type: Number,
+        default: 0.00
+      },
+      datePurchased: {
+        type: Date
       }
     }
   ],
+  yeastStarter: {
+    ingredients: [
+      {
+        ingredient: {
+          type: String,
+          required: true,
+          minlength: 1,
+          trim: true
+        },
+        amt: {
+          type: Number,
+          required: true
+        },
+        unit: {
+          type: String,
+          enum: ['bag', 'bottle', 'bucket', 'cap', 'cup', 'gal', 'kit',
+                'lb', 'oz', 'pint', 'pkg', 'roll', 'tbl', 'tsp']
+        },
+        price: {
+          type: Number,
+          default: 0.00
+        },
+        datePurchased: {
+          type: Date
+        }
+      }
+    ],
+    notes: {
+      type: String
+    }
+  },
+  process: [
+    {
+      type: {
+        type: String,
+        enum: ['Prior to Boil', 'Boil Day', 'Fermentation', 'Bottling']
+      },
+      steps: [
+        {
+          instruction: {
+            type: String,
+            required:  true,
+            minlength: 1,
+            trim: true
+          }
+        }
+      ]
+    }
+  ],
   notes: {
-    type: String,
-    default: null
+    type: String
   },
   createdAt: {
     type: Date,
     required: true
+  },
+  updatedAt: {
+    type: Date,
+    default: null
   }
 });
 
 const Recipe = mongoose.model("Recipe", recipeSchema);
 
-const brewSchema = recipeSchema.extend({
-  batch:  {
-    type: Number,
-    default: null
-  },
-  brewName: {
-    type: String,
-    required: true,
-    minlength: 1,
-    trim: true
-  }
-});
-
-const Brew = mongoose.model("Brew", brewSchema);
-
-module.exports = {Recipe, Brew};
+module.exports = {Recipe};

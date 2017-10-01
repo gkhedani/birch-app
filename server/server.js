@@ -7,7 +7,7 @@ const bodyParser = require("body-parser");
 const moment = require("moment");
 
 const {mongoose} = require("./db/mongoose");
-const {Brew} = require("./models/brew");
+const {Recipe} = require("./models/recipe");
 
 const app = express();
 
@@ -15,12 +15,14 @@ app.use(bodyParser.json());
 
 // add base recipe
 app.post("/recipe", (req, res) => {
-  console.log("Adding base recipe");
+  console.log("Adding original recipe");
   // let nowTS = moment();
 
-  let brew = new Brew({
+  let recipe = new Recipe({
     name: req.body.name,
-    type: "base",
+    share: req.body.share,
+    type: "original",
+    group: req.body.group,
     method: req.body.method,
     BJCPStyle: req.body.BJCPStyle,
     ingredients: [{
@@ -28,7 +30,7 @@ app.post("/recipe", (req, res) => {
       amt: req.body.amt,
       unit: req.body.unit,
       price: req.body.price,
-      dateProcured: req.body.dateProcured
+      datePurchased: req.body.datePurchased
     },
     ],
     yeastStarter: {
@@ -38,31 +40,33 @@ app.post("/recipe", (req, res) => {
         unit: req.body.ysUnit
       }],
       price: req.body.ysPrice,
-      dateProcured: req.body.ysDateProcured,
+      datePurchased: req.body.ysDatePurchased,
       notes: req.body.ysnotes
     },
     notes: req.body.notes,
     createdAt: moment().valueOf()
   });
 
-  brew.save().then((rec) => {
+  recipe.save().then((rec) => {
     res.send(rec);
   }, (e) => {
     res.status(400).send(e);
   });
 });
 
-// add varietal brew
-app.post("/varietal", (req, res) => {
-  console.log("Adding new varietal brew");
+// add adaptation
+app.post("/adaptation", async (req, res) => {
+  console.log("Adding new adapted recipe");
 
-  let brew = new Brew({
+  let recipe = new Recipe({
     name: req.body.name,
-    type: "varietal",
-    _base: req.body.baseID,
+    share: req.body.share,
+    type: "adaptation",
+    group: req.body.group,
+    _original: req.body.originalID,
     batch: req.body.batch,
     batchSize: req.body.batchSize,
-    // method should come from base
+    // method should come from originalID
     method: req.body.method,
     BJCPStyle: req.body.BJCPStyle,
     ingredients: [{
@@ -70,7 +74,7 @@ app.post("/varietal", (req, res) => {
       amt: req.body.amt,
       unit: req.body.unit,
       price: req.body.price,
-      dateProcured: req.body.dateProcured
+      dateProcured: req.body.datePurchased
     },
     ],
     yeastStarter: {
@@ -80,30 +84,51 @@ app.post("/varietal", (req, res) => {
         unit: req.body.ysUnit
       }],
       price: req.body.ysPrice,
-      dateProcured: req.body.ysDateProcured,
+      dateProcured: req.body.ysDatePurchased,
       notes: req.body.ysnotes
     },
     notes: req.body.notes,
     createdAt: moment().valueOf()
   });
 
-  brew.save().then((rec) => {
+  try {
+    const rec = await recipe.save();
+    if (!rec) {
+      return res.status(400).send(e);
+    }
     res.send(rec);
-  }, (e) => {
-    res.status(400).send(e);
-  });
+  } catch (e) {
+    return res.status(400).send(e);
+  }
+  // brew.save().then((rec) => {
+  //   res.send(rec);
+  // }, (e) => {
+  //   res.status(400).send(e);
+  // });
 });
 
-// get all brews
-app.get("/brews", (req, res) => {
-  Brew.find().then((brews) => {
-    res.send({brews});
-  }, (e) => {
-    res.status(400).send(e);
-  });
+// get all recipes
+app.get("/recipes", async (req, res) => {
+  try {
+    const recipes = await Recipe.find();
+    if (!recipes) {
+      return res.status(400).send(e);
+    }
+    res.send({recipes});
+  } catch (e) {
+    return res.status(400).send(e);
+  }
 });
 
-// add an ingredient to a brew
+// app.get("/brews", (req, res) => {
+//   Brew.find().then((brews) => {
+//     res.send({brews});
+//   }, (e) => {
+//     res.status(400).send(e);
+//   });
+// });
+
+// add an ingredient to a recipe
 app.patch("/ingredient/add/:id", (req, res) => {
   let id = req.params.id;
   if (!ObjectId.isValid(id)) {
@@ -111,7 +136,7 @@ app.patch("/ingredient/add/:id", (req, res) => {
   }
 
   // add the ingredient to the ingredients array
-  Brew.updateOne({
+  Recipe.updateOne({
     _id: id
   }, {$push: {
     ingredients: {
@@ -122,18 +147,18 @@ app.patch("/ingredient/add/:id", (req, res) => {
   }, $set: {
       updatedAt: moment().valueOf()
     }
-  }).then((brew) => {
-    if (!brew) {
+  }).then((recipe) => {
+    if (!recipe) {
       return res.status(404).send();
     }
 
     // success
-    res.send({brew});
+    res.send({recipe});
   }).catch((e) => res.status(400).send());
 });
 
 
-// delete an ingredient from a brew
+// delete an ingredient from a recipe
 app.patch("/ingredient/delete/:id", (req, res) => {
   let id = req.params.id;
   if (!ObjectId.isValid(id)) {
@@ -142,7 +167,7 @@ app.patch("/ingredient/delete/:id", (req, res) => {
 
   // delete the ingredient from the ingredients array
   // WARNING: returns 200 if a non-existent ingredient is deleted
-  Brew.updateOne({
+  Recipe.updateOne({
     _id: id
   }, {$pull: {
     ingredients: {
@@ -152,30 +177,30 @@ app.patch("/ingredient/delete/:id", (req, res) => {
   }, $set: {
       updatedAt: moment().valueOf()
     }
-  }).then((brew) => {
-    if (!brew) {
+  }).then((recipe) => {
+    if (!recipe) {
       return res.status(404).send();
     }
 
     // success
-    res.send({brew});
+    res.send({recipe});
   }).catch((e) => res.status(400).send());
 });
 
 
-// get all brews for a base recipe
-app.get("/brews/:id", (req, res) => {
+// get all adaptations for the original recipe
+app.get("/adaptations/:id", (req, res) => {
   let id = req.params.id;
   if (!ObjectId.isValid(id)) {
     return res.status(404).send();
   }
-  // find with id = _id and/or _base
-  Brew.find({$or: [{_id: id}, {_base: id}]
-  }).then((brews) => {
-    if (!brews) {
+  // find with id = _id and/or _original
+  Recipe.find({$or: [{_id: id}, {_original: id}]
+  }).then((recipes) => {
+    if (!recipes) {
       return res.status(404).send();
     }
-    res.send({brews});
+    res.send({recipes});
   }).catch((e) => res.status(400).send());
 });
 
